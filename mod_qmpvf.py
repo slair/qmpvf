@@ -265,9 +265,9 @@ class MainWindow(QMainWindow):
 
 				if not self.pb_kill_player.isVisible():
 					self.pb_kill_player.setText("Закрыть\n%r"%self.player_pid)
+					self.pb_1.setText(txtPause)
 
 				if self.win_player and self.win_player.id!="":
-					self.pb_1.setText(txtPause)
 					self.pb_1.setEnabled(True)
 					self.pb_1.setFocus(True)
 					self.pb_kill_player.setVisible(True)
