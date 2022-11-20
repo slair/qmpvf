@@ -1,4 +1,5 @@
 mod_qmpvf_res.py
+*.delme
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

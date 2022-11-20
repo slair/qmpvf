@@ -37,13 +37,15 @@ my_name = os.path.splitext(os.path.basename(my_file_name))[0]
 log_file_name = opj(tmpdir, my_name + ".log")
 print("log_file_name = %r" % log_file_name)
 
-BASELOGFORMAT = "%(asctime)s%(levelname)9s %(funcName)s: %(message)-80s"
+BASELOGFORMAT = "%(asctime)s%(levelname)9s %(funcName)s: %(message)s"
 FLN = ""
-BASEDTFORMAT = " %d.%m.%Y %H:%M:%S "
+#~ BASEDTFORMAT = " %d.%m.%Y %H-%M-%S "
+BASEDTFORMAT = " %d%m%y %H%M%S "
 
 try:
 	if _DEBUG:
-		FLN = "%(pathname)s:%(lineno)d:"
+		#~ FLN = "		|		%(pathname)s:%(lineno)d:"
+		FLN = "\t" * 30 + '|	File "%(pathname)s", line %(lineno)d'
 		#~ BASEDTFORMAT = " "
 		loglevel = logging.DEBUG
 	else:
@@ -60,12 +62,12 @@ except NameError:
 #~ )
 logger = logging.getLogger(my_name)
 console_output_handler = logging.StreamHandler(sys.stderr)
-formatter = logging.Formatter(FLN + BASELOGFORMAT, BASEDTFORMAT)
+formatter = logging.Formatter(BASELOGFORMAT + FLN, BASEDTFORMAT)
 console_output_handler.setFormatter(formatter)
 logger.addHandler(console_output_handler)
 
 fh = logging.FileHandler(log_file_name, encoding="utf-8")
-formatter = logging.Formatter(BASELOGFORMAT + "\t\t\t|\t" + FLN, BASEDTFORMAT)
+formatter = logging.Formatter(BASELOGFORMAT + FLN, BASEDTFORMAT)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
@@ -189,7 +191,7 @@ def QUIT(exitcode=0):
 
 
 def main():
-	print("- main()")
+	logd("- main()")
 	for var, value in globals().items():
 		logd("%16s = %s", var, value)
 

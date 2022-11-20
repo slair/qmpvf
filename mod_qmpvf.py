@@ -1,29 +1,34 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-MAX_QUEUE_LEN = 16
-SEC_TO_EXIT = 10
-TIMER_INTERVAL = 1000	# msec
-WAIT_BEFORE_RENAME = 2
-WAIT_AFTER_RENAME = 2
-PARTSEP = "=#="
-PL_EXE = "mpv.exe"
-txtPause = "Пауза"
-txtPlay = "Продолжить"
-# --aid=1
-PLAYCMD='c:\\windows\\system32\\cmd.exe /c start C:\\apps\\mpv\\' + \
-	PL_EXE + ' -fs --fs-screen=0' + \
-	' --softvol-max=500 --brightness=10 -- "%s"'
-
-
-import os, sys, time, tempfile, logging, glob, re, subprocess
+import os
+import sys
+import time
+import tempfile
+import logging
+import glob
+import re
+import subprocess
 from threading import Thread
 
-opj=os.path.join
-tpc=time.perf_counter
+from psutil import process_iter
+from ahk import AHK
+from ahk.window import Window
 
-WIN32 = sys.platform=="win32"
-LINUX = sys.platform=="linux"
+# pylint: disable=E0611
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+#~ from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import Qt, QTimer
+from PyQt5 import uic
+# pylint: disable=
+
+from saymod import snd_play_async
+
+WIN32 = sys.platform == "win32"
+LINUX = sys.platform == "linux"
+
+opj = os.path.join
+tpc = time.perf_counter
 tmpdir = tempfile.gettempdir()
 
 my_file_name = os.path.abspath(__file__)
@@ -33,38 +38,57 @@ my_folder = os.path.dirname(my_file_name)
 my_name = os.path.splitext(os.path.basename(my_file_name))[0]
 
 logger = logging.getLogger("qmpvf")
-logd=logger.debug
-logi=logger.info
-logw=logger.warning
-loge=logger.error
-logc=logger.critical
+logd = logger.debug
+logi = logger.info
+logw = logger.warning
+loge = logger.error
+logc = logger.critical
 
-from psutil import process_iter
-from ahk import AHK
-from ahk.window import Window
+try:
+	import mod_qmpvf_res
+except ModuleNotFoundError:
+	fp_res = opj(my_folder, "mod_qmpvf.qrc")
+	fp_res_py = opj(my_folder, "mod_qmpvf_res.py")
+	make_res_cmd = 'pyrcc5 "%s" -o "%s"' % (fp_res, fp_res_py)
+	logd("generating %r from %r" % (fp_res_py, fp_res))
+	os.system(make_res_cmd)
+
+try:
+	import mod_qmpvf_res		# noqa
+except ModuleNotFoundError:
+	logd("generating %r from %r failed" % (fp_res_py, fp_res))
+
+from transliterate import translit	# noqa
+# , get_available_language_codes
+
 ahk = AHK()
 
-# pylint: disable=E0611
-from PyQt5.QtWidgets import QApplication, QMainWindow, QSystemTrayIcon, QWidget
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, QTimer
-from PyQt5 import uic
-# pylint: disable=
+MAX_QUEUE_LEN = 16
+SEC_TO_EXIT = 10
+TIMER_INTERVAL = 1000		# msec
+WAIT_BEFORE_RENAME = 2
+WAIT_AFTER_RENAME = 2
+PARTSEP = "=#="
+PL_EXE = "mpv.exe"
+txtPause = "Пауза"
+txtPlay = "Продолжить"
+# --aid=1
+PLAYCMD = 'c:\\windows\\system32\\cmd.exe /c start C:\\apps\\mpv\\' \
+	+ PL_EXE + ' -fs --fs-screen=0' \
+	+ ' --softvol-max=500 --brightness=10 -- "%s"'
 
-from saymod import snd_play_async
-import mod_qmpvf_res
 
 def asnc(func):
 	def wrapper(*args, **kwargs):
-		thr = Thread(target = func, args = args, kwargs = kwargs)
+		thr = Thread(target=func, args=args, kwargs=kwargs)
 		thr.start()
 	return wrapper
 
 
 @asnc
 def do_command(cmd):
-	p = subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, \
-		stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE
+		, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 def get_procs_count(exe_fn):
@@ -76,37 +100,37 @@ def get_procs_count(exe_fn):
 
 
 def get_player_pid(exe_fn):
-	pc = 0
+	#~ pc = 0
 	for p in process_iter(['name']):
 		if p.info['name'] == exe_fn:
 			return p.pid
 	return None
 
 
-def mc(odin,dva,mnogo,num):
+def mc(odin, dva, mnogo, num):
 	# остаток
 	mod = num % 10
 	num = num % 100
-	if (num >10) and (num<20):
+	if (num > 10) and (num < 20):
 		form = 3
-	elif mod==1:
+	elif mod == 1:
 		form = 1
-	elif (mod>1) and (mod<5):
+	elif (mod > 1) and (mod < 5):
 		form = 2
 	else:
 		form = 3
-	if form==1:
+	if form == 1:
 		return odin
-	elif form==2:
+	elif form == 2:
 		return dva
 	else:
 		return mnogo
 
 
 def strip_above_0xffff(s):
-	r=""
+	r = ""
 	for c in s:
-		if ord(c)<=0xffff:
+		if ord(c) <= 0xffff:
 			r += c
 	return r
 
@@ -130,7 +154,7 @@ def untranslit(s):
 	for word in words:
 		res.append(untranslit_word(word))
 	res = " ".join(res)
-	return res[0].upper()+res[1:]
+	return res[0].upper() + res[1:]
 
 
 def get_video_title(s):
@@ -158,15 +182,15 @@ def get_video_title(s):
 
 	s = s.strip()
 
-	if s.count(PARTSEP)==2:
-		dt,title,_ = s.split(PARTSEP)
+	if s.count(PARTSEP) == 2:
+		dt, title, _ = s.split(PARTSEP)
 
 		title = re.sub(r'(?<=\d)[_](?=\d)', ":", title)
 
 		return title
 
-	elif s.count(PARTSEP)==1:
-		dt,title = s.split(PARTSEP)
+	elif s.count(PARTSEP) == 1:
+		dt, title = s.split(PARTSEP)
 		title = title[:title.rfind(".")]
 
 		if title.split()[-1].isdigit():
@@ -176,6 +200,7 @@ def get_video_title(s):
 
 	else:
 		return s
+
 
 class MainWindow(QMainWindow):
 	start_perf_counter = tpc()
@@ -207,8 +232,8 @@ class MainWindow(QMainWindow):
 		self.timer = QTimer(self)
 		self.timer.timeout.connect(self.on_timeout)
 		self.timer.start(TIMER_INTERVAL)
-		logd("TIMER_INTERVAL=%r msec Passed %.6f sec",
-			TIMER_INTERVAL, tpc()-self.start_perf_counter)
+		logd("TIMER_INTERVAL=%r msec Passed %.6f sec"
+			, TIMER_INTERVAL, tpc() - self.start_perf_counter)
 
 	def keyPressEvent(self, event):
 		logd("event.key()=%r", event.key())
@@ -223,7 +248,6 @@ class MainWindow(QMainWindow):
 		path = opj(my_folder, "mod_qmpvf.ui")
 		uic.loadUi(path, self)
 
-
 	def activate(self):
 		self.setFocus(True)
 		self.activateWindow()
@@ -231,14 +255,13 @@ class MainWindow(QMainWindow):
 		self.show()
 		self.pb_1.setFocus(True)
 
-
 	def on_timeout(self):
 		ts = tpc()
 
 		now = time.strftime("%H:%M:%S")
 		self.label_clock.setText(now)
 
-		if get_procs_count(PL_EXE)==0 and self.ts_video_stopped is None \
+		if get_procs_count(PL_EXE) == 0 and self.ts_video_stopped is None \
 			and not (self.player_pid is None):
 
 			self.player_pid = None
@@ -254,20 +277,20 @@ class MainWindow(QMainWindow):
 		if self.player_pid:
 			if not self.no_catch_PL_EXE:
 
-				if self.win_player is None or self.win_player.id=="":
+				if self.win_player is None or self.win_player.id == "":
 					self.win_player = Window.from_pid(ahk
 						, pid=str(self.player_pid))
-					if self.win_player.id!="":
+					if self.win_player.id != "":
 						logd("Found player_pid=%r win_player.id=%r"
 							, self.player_pid, self.win_player.id)
 					#~ else:
 						#~ logd("Can't get win_player.id")
 
 				if not self.pb_kill_player.isVisible():
-					self.pb_kill_player.setText("Закрыть\n%r"%self.player_pid)
+					self.pb_kill_player.setText("Закрыть\n%r" % self.player_pid)
 					self.pb_1.setText(txtPause)
 
-				if self.win_player and self.win_player.id!="":
+				if self.win_player and self.win_player.id != "":
 					self.pb_1.setEnabled(True)
 					self.pb_1.setFocus(True)
 					self.pb_kill_player.setVisible(True)
@@ -277,44 +300,42 @@ class MainWindow(QMainWindow):
 			self.pb_kill_player.setVisible(False)
 
 		if self.ts_video_stopped \
-			and (tpc()-self.ts_video_stopped)>WAIT_BEFORE_RENAME:
-
+			and (tpc() - self.ts_video_stopped) > WAIT_BEFORE_RENAME:
 			self.rename_video()
 
 		if self.ts_video_renamed \
-			and (tpc()-self.ts_video_renamed)>WAIT_AFTER_RENAME:
+			and (tpc() - self.ts_video_renamed) > WAIT_AFTER_RENAME:
 			self.start_video()
 
 		if self.tpc_no_videos:
 			self.no_catch_PL_EXE = True
 			self.get_videos()
-			self.label_video_remains.setText("Выход через %d "%self.sec_remains
+			self.label_video_remains.setText("Выход через %d "
+				% self.sec_remains
 				+ mc("секунду", "секунды", "секунд", self.sec_remains))
 			self.sec_remains -= 1
 			snd_play_async("C:\\slair\\share\\sounds\\click-6.ogg")
 
-			if self.sec_remains<=-1:
+			if self.sec_remains <= -1:
 				snd_play_async("C:\\slair\\share\\sounds\\drum.mp3")
 				self.close()
 
-		duration = tpc()-ts
-		if duration>TIMER_INTERVAL:
+		duration = tpc() - ts
+		if duration > TIMER_INTERVAL:
 			logd("on_timeout(%r): duration=%.6f", self, duration)
-
 
 	def rename_video(self):
 		if not self.start_next:
 			return
 		if self.video_to_play and os.path.exists(self.video_to_play):
-
-			new_item = self.video_to_play[:self.video_to_play.rfind(".")] + \
-				".seen"
+			new_item = self.video_to_play[:self.video_to_play.rfind(".")] \
+				+ ".seen"
 			#~ log_new_item = new_item \
 				#~ .encode("cp1251", "replace").decode("cp1251")
 
-			logd("renaming %r to %r"%(self.video_to_play, new_item))
+			logd("renaming %r to %r" % (self.video_to_play, new_item))
 
-			rename_status="<переименовано>"
+			rename_status = "<переименовано>"
 			try:
 				os.rename(self.video_to_play, new_item)
 			except PermissionError:
@@ -324,28 +345,28 @@ class MainWindow(QMainWindow):
 
 			video_name = self.video_to_play[:self.video_to_play.rfind(".")]
 
-			if os.path.exists(video_name+".srt"):
+			if os.path.exists(video_name + ".srt"):
 				try:
-					os.rename(video_name+".srt", video_name+".srt.seen")
+					os.rename(video_name + ".srt", video_name + ".srt.seen")
 				except PermissionError:
-					loge("renaming %r to %r failed", video_name+".srt"
-						, video_name+".srt.seen")
+					loge("renaming %r to %r failed", video_name + ".srt"
+						, video_name + ".srt.seen")
 
-			if os.path.exists(video_name+".ru.vtt"):
+			if os.path.exists(video_name + ".ru.vtt"):
 				try:
-					os.rename(video_name+".ru.vtt", video_name+".ru.vtt.seen")
+					os.rename(video_name + ".ru.vtt", video_name
+						+ ".ru.vtt.seen")
 				except PermissionError:
-					loge("renaming %r to %r failed", video_name+".ru.vtt"
-						, video_name+".ru.vtt.seen")
+					loge("renaming %r to %r failed", video_name + ".ru.vtt"
+						, video_name + ".ru.vtt.seen")
 
 			self.ts_video_stopped = None
 			self.ts_video_renamed = tpc()
 
 			self.get_videos()
 
-
 	def sort_videos(self):
-		if self.order_by=="size":
+		if self.order_by == "size":
 			self.videos.sort(key=lambda x: x[1])
 			self.videos.reverse()
 		else:
@@ -366,7 +387,7 @@ class MainWindow(QMainWindow):
 		self.videos = []
 		for fn in _:
 			fsize = os.stat(fn).st_size
-			if fsize==0:
+			if fsize == 0:
 				try:
 					os.unlink(fn)
 				except PermissionError:
@@ -376,7 +397,7 @@ class MainWindow(QMainWindow):
 				self.videos.append((fn, fsize))
 		logd("%r videos found", len(self.videos))
 		self.sort_videos()
-		if len(self.videos)>0:
+		if len(self.videos) > 0:
 			self.sec_remains = SEC_TO_EXIT
 			self.tpc_no_videos = None
 
@@ -390,12 +411,14 @@ class MainWindow(QMainWindow):
 			self.lw_videos.addItem(get_video_title(self.videos[i][0]))
 
 
-#~ QListWidgetItem* lwi = new QListWidgetItem(QIcon(":Image/pinwheel.png"), "Цвета");
+#~ QListWidgetItem* lwi = new QListWidgetItem(QIcon(":Image/pinwheel.png")
+#~ , "Цвета");
 #~ lwi->setSizeHint(QSize(256, 52));
 #~ listWidget->addItem( lwi );
 #~ lwi->setTextAlignment(Qt::AlignCenter);
 
-#~ lwi =  new QListWidgetItem(QIcon(":Image/pinwheel.png"), "Управление и что-то еще");
+#~ lwi =  new QListWidgetItem(QIcon(":Image/pinwheel.png")
+#~ , "Управление и что-то еще");
 #~ lwi->setSizeHint(QSize(256, 52));
 #~ listWidget->addItem( lwi );
 #~ lwi->setTextAlignment(Qt::AlignCenter);
@@ -403,23 +426,27 @@ class MainWindow(QMainWindow):
 		self.videos_dirty = False
 
 	def start_video(self):
-		if len(self.videos)>0 and self.start_next and self.player_pid is None:
+		if len(self.videos) > 0 and self.start_next \
+			and self.player_pid is None:
+
 			self.video_to_play = self.videos.pop(0)[0]
 			self.ts_video_stopped = None
 			self.ts_video_renamed = None
 			self.label_video_remains.setText(
-				"Осталось %d видео"%(len(self.videos)+1))
+				"Осталось %d видео" % (len(self.videos) + 1))
 			self.videos_dirty = True
-			self.label_current_video.setText(get_video_title(self.video_to_play))
-			logd("starting '%s'", PLAYCMD%self.video_to_play)
+			self.label_current_video.setText(
+				get_video_title(self.video_to_play))
+
+			logd("starting '%s'", PLAYCMD % self.video_to_play)
 			self.no_catch_PL_EXE = False
-			do_command(PLAYCMD%self.video_to_play)
+			do_command(PLAYCMD % self.video_to_play)
 			self.update_videos()
 
-			while get_procs_count(PL_EXE)==0:
+			while get_procs_count(PL_EXE) == 0:
 				time.sleep(0.2)
 
-		elif len(self.videos)==0 and self.player_pid is None:
+		elif len(self.videos) == 0 and self.player_pid is None:
 			if self.tpc_no_videos is None:
 				self.tpc_no_videos = tpc()
 				self.label_current_video.setText("Видео закончились")
@@ -427,7 +454,7 @@ class MainWindow(QMainWindow):
 
 		else:
 			self.label_video_remains.setText(
-				"Осталось %d видео"%(len(self.videos)))
+				"Осталось %d видео" % (len(self.videos)))
 			#~ self.player_pid = get_player_pid(PL_EXE)
 			self.label_current_video.setText("<что-то воспроизводится>")
 
@@ -437,24 +464,23 @@ class MainWindow(QMainWindow):
 
 		os.kill(self.player_pid, 9)
 
-
 	def pb_1_clicked(self):
-		if not self.win_player or self.win_player.id=="":
+		if not self.win_player or self.win_player.id == "":
 			return
 
-		if self.pb_1.text()==txtPause:
+		if self.pb_1.text() == txtPause:
 			self.win_player.send("p")
 			self.pb_1.setText(txtPlay)
 			logd("sent 'p' to %r", self.win_player)
-		elif self.pb_1.text()==txtPlay:
+		elif self.pb_1.text() == txtPlay:
 			self.win_player.send("p")
 			self.pb_1.setText(txtPause)
 			logd("sent 'p' to %r", self.win_player)
 
 
 def qmpvf_main(*args, **kwargs):
-	print("- qmpvf_main(%s, %s)"%(args, kwargs))
-	for var,value in globals().items():
+	logd("- qmpvf_main(%s, %s)" % (args, kwargs))
+	for var, value in globals().items():
 		if var not in ("__builtins__"):
 			logd("%16s = %s", var, value)
 
@@ -470,9 +496,11 @@ def qmpvf_main(*args, **kwargs):
 
 
 def main():
-	print("- main()", __name__)
-	for var,value in globals().items(): print("%16s = %s"%(var, value))
+	logd("- main()", __name__)
+	for var, value in globals().items():
+		logd("%16s = %s" % (var, value))
 	qmpvf_main()
 
-if __name__=='__main__':
+
+if __name__ == '__main__':
 	main()
