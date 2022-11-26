@@ -356,7 +356,7 @@ class MainWindow(QMainWindow):
 				rename_status = "<не удалось переименовать>"
 
 			self.label_current_video.setText(rename_status)
-			self.label_current_video.setStyleSheet("color:#b03010;")
+			self.label_current_video.setStyleSheet("color:#c02000;")
 
 			video_name = self.video_to_play[:self.video_to_play.rfind(".")]
 
