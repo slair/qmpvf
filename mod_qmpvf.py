@@ -61,22 +61,23 @@ except ModuleNotFoundError:
 from transliterate import translit	# noqa
 # , get_available_language_codes
 
-ahk = AHK()
-
 MAX_QUEUE_LEN = 16
-SEC_TO_EXIT = 10
-TIMER_INTERVAL = 1000		# msec
-WAIT_BEFORE_RENAME = 2
-WAIT_AFTER_RENAME = 2
+SEC_TO_EXIT = 10				# seconds
+TIMER_INTERVAL = 1000			# milliseconds
+WAIT_FOR_PLAYER_START = 5		# seconds
+WAIT_BEFORE_RENAME = 3			# seconds
+WAIT_AFTER_RENAME = 2			# seconds
 PARTSEP = "=#="
 PL_EXE = "mpv.exe"
 txtPause = "Пауза"
 txtPlay = "Продолжить"
-
-# --aid=1
 PLAYCMD = 'c:\\windows\\system32\\cmd.exe /c start C:\\apps\\mpv\\' \
 	+ PL_EXE + ' -fs --fs-screen=0' \
 	+ ' --softvol-max=500 --brightness=10 -- "%s"'
+	# --aid=1
+
+
+ahk = AHK()
 
 
 def asnc(func):
@@ -444,8 +445,13 @@ class MainWindow(QMainWindow):
 			do_command(PLAYCMD % self.video_to_play)
 			self.update_videos()
 
+			_start_wait = time.perf_counter()
 			while get_procs_count(PL_EXE) == 0:
 				time.sleep(0.2)
+				if time.perf_counter() - _start_wait > WAIT_FOR_PLAYER_START:
+					logw("player not started for %r seconds"
+						, WAIT_FOR_PLAYER_START)
+					break
 
 		elif len(self.videos) == 0 and self.player_pid is None:
 			if self.tpc_no_videos is None:
