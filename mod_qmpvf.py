@@ -16,7 +16,7 @@ from ahk import AHK
 from ahk.window import Window
 
 # pylint: disable=E0611
-from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QListWidgetItem
 #~ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5 import uic
@@ -218,11 +218,16 @@ class MainWindow(QMainWindow):
 	sec_remains = SEC_TO_EXIT
 	no_catch_PL_EXE = False
 	win_player = None
+	label_current_video_ss = None
 
 	def __init__(self):
 		super(MainWindow, self).__init__()
 
 		self.load_ui()
+
+		self.label_current_video_ss = self.label_current_video.styleSheet()
+		logd("self.label_current_video_ss = %r"
+			, self.label_current_video_ss)
 
 		self.pb_1.setText(txtPause)
 		self.pb_1.setEnabled(False)
@@ -258,6 +263,12 @@ class MainWindow(QMainWindow):
 		self.pb_1.setFocus(True)
 
 	def on_timeout(self):
+
+		#~ logd("self.ts_video_stopped = %r", self.ts_video_stopped)
+		#~ logd("self.ts_video_renamed = %r", self.ts_video_renamed)
+		#~ logd("self.player_pid = %r", self.player_pid)
+		#~ logd("self.win_player = %r", self.win_player)
+
 		ts = tpc()
 
 		now = time.strftime("%H:%M:%S")
@@ -289,7 +300,8 @@ class MainWindow(QMainWindow):
 						#~ logd("Can't get win_player.id")
 
 				if not self.pb_kill_player.isVisible():
-					self.pb_kill_player.setText("Закрыть\n%r" % self.player_pid)
+					self.pb_kill_player.setText(
+						"Закрыть\n%r" % self.player_pid)
 					self.pb_1.setText(txtPause)
 
 				if self.win_player and self.win_player.id != "":
@@ -344,6 +356,7 @@ class MainWindow(QMainWindow):
 				rename_status = "<не удалось переименовать>"
 
 			self.label_current_video.setText(rename_status)
+			self.label_current_video.setStyleSheet("color:#b03010;")
 
 			video_name = self.video_to_play[:self.video_to_play.rfind(".")]
 
@@ -410,20 +423,9 @@ class MainWindow(QMainWindow):
 		self.lw_videos.clear()
 		self.lw_videos.setItemAlignment(Qt.AlignCenter)
 		for i in range(min(MAX_QUEUE_LEN, len(self.videos))):
-			self.lw_videos.addItem(get_video_title(self.videos[i][0]))
-
-
-#~ QListWidgetItem* lwi = new QListWidgetItem(QIcon(":Image/pinwheel.png")
-#~ , "Цвета");
-#~ lwi->setSizeHint(QSize(256, 52));
-#~ listWidget->addItem( lwi );
-#~ lwi->setTextAlignment(Qt::AlignCenter);
-
-#~ lwi =  new QListWidgetItem(QIcon(":Image/pinwheel.png")
-#~ , "Управление и что-то еще");
-#~ lwi->setSizeHint(QSize(256, 52));
-#~ listWidget->addItem( lwi );
-#~ lwi->setTextAlignment(Qt::AlignCenter);
+			new_lw_item = QListWidgetItem(get_video_title(self.videos[i][0])
+				, self.lw_videos)
+			new_lw_item.setTextAlignment(Qt.AlignCenter)
 
 		self.videos_dirty = False
 
@@ -432,30 +434,48 @@ class MainWindow(QMainWindow):
 			and self.player_pid is None:
 
 			self.video_to_play = self.videos.pop(0)[0]
-			self.ts_video_stopped = None
-			self.ts_video_renamed = None
 			self.label_video_remains.setText(
 				"Осталось %d видео" % (len(self.videos) + 1))
 			self.videos_dirty = True
+			self.label_current_video.setStyleSheet("")
 			self.label_current_video.setText(
 				get_video_title(self.video_to_play))
 
 			logd("starting '%s'", PLAYCMD % self.video_to_play)
 			self.no_catch_PL_EXE = False
 			do_command(PLAYCMD % self.video_to_play)
-			self.update_videos()
+			self.player_pid = get_player_pid(PL_EXE)
 
 			_start_wait = time.perf_counter()
-			while get_procs_count(PL_EXE) == 0:
-				time.sleep(0.2)
+			while self.player_pid is None and get_procs_count(PL_EXE) == 0:
+				self.player_pid = get_player_pid(PL_EXE)
+				if self.player_pid is not None:
+					logd("player started self.player_pid = %r"
+						, self.player_pid)
+					break
+
+				logd("time.perf_counter() - _start_wait = %r"
+					, time.perf_counter() - _start_wait)
+
 				if time.perf_counter() - _start_wait > WAIT_FOR_PLAYER_START:
 					logw("player not started for %r seconds"
 						, WAIT_FOR_PLAYER_START)
+					self.player_pid = 0
 					break
+
+				time.sleep(0.2)
+
+			logd("self.player_pid = %r, get_procs_count(PL_EXE) = %r"
+				, self.player_pid, get_procs_count(PL_EXE))
+
+			self.ts_video_stopped = None
+			self.ts_video_renamed = None
+			self.update_videos()
 
 		elif len(self.videos) == 0 and self.player_pid is None:
 			if self.tpc_no_videos is None:
 				self.tpc_no_videos = tpc()
+				self.label_current_video.setStyleSheet("color:#000000;")
 				self.label_current_video.setText("Видео закончились")
 				self.tpc_no_videos = tpc()
 
