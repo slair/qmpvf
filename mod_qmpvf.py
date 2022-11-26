@@ -72,6 +72,7 @@ PARTSEP = "=#="
 PL_EXE = "mpv.exe"
 txtPause = "Пауза"
 txtPlay = "Продолжить"
+
 # --aid=1
 PLAYCMD = 'c:\\windows\\system32\\cmd.exe /c start C:\\apps\\mpv\\' \
 	+ PL_EXE + ' -fs --fs-screen=0' \
