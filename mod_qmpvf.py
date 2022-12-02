@@ -162,6 +162,11 @@ def untranslit(s):
 def get_video_title(s):
 	#~ s = strip_above_0xffff(s)
 
+	if "Й" in s:
+		s = s.replace("Й", "Й")
+	if "Й" in s:
+		s = s.replace("й", "й")
+
 	ls = s.lower()
 	if ls.endswith(".mp4") or ls.endswith(".avi") or ls.endswith(".mov"):
 		s = s[:-4]
