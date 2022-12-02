@@ -8,6 +8,7 @@ import tempfile
 import logging
 import glob
 import re
+import string
 import subprocess
 from threading import Thread
 
@@ -224,6 +225,7 @@ class MainWindow(QMainWindow):
 	no_catch_PL_EXE = False
 	win_player = None
 	label_current_video_ss = None
+	all_chars = string.ascii_lowercase + string.digits
 
 	def __init__(self):
 		super(MainWindow, self).__init__()
@@ -254,6 +256,17 @@ class MainWindow(QMainWindow):
 
 		if not event.isAccepted() and event.key() == Qt.Key_Escape:
 			self.close()
+
+		if not self.win_player or self.win_player.id == "":
+			return
+
+		if event.key() > 255:
+			return
+
+		_char = chr(event.key()).lower()
+		if _char in self.all_chars:
+			self.win_player.send(_char)
+			logd("sent %r to %r", _char, self.win_player)
 
 	def load_ui(self):
 		logd("my_folder=%r", my_folder)
