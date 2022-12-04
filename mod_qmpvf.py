@@ -225,7 +225,7 @@ class MainWindow(QMainWindow):
 	no_catch_PL_EXE = False
 	win_player = None
 	label_current_video_ss = None
-	all_chars = string.ascii_lowercase + string.digits
+	all_chars = string.ascii_lowercase + string.digits + "/*"
 
 	def __init__(self):
 		super(MainWindow, self).__init__()
