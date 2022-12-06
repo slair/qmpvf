@@ -275,9 +275,10 @@ class MainWindow(QMainWindow):
 
 	def activate(self):
 		self.setFocus(True)
+		self.setWindowState(Qt.WindowMaximized)
 		self.activateWindow()
 		self.raise_()
-		self.show()
+		self.showMaximized()
 		self.pb_1.setFocus(True)
 
 	def on_timeout(self):
@@ -299,8 +300,6 @@ class MainWindow(QMainWindow):
 			self.win_player = None
 			self.ts_video_stopped = tpc()
 			logd("video stopped at %.6f", self.ts_video_stopped)
-			# TODO: restore window
-			#~ self.restore
 			self.activate()
 
 		if self.player_pid is None:
