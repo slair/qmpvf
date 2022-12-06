@@ -299,6 +299,8 @@ class MainWindow(QMainWindow):
 			self.win_player = None
 			self.ts_video_stopped = tpc()
 			logd("video stopped at %.6f", self.ts_video_stopped)
+			# TODO: restore window
+			#~ self.restore
 			self.activate()
 
 		if self.player_pid is None:
