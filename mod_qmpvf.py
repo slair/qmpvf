@@ -361,10 +361,9 @@ class MainWindow(QMainWindow):
 		if not self.start_next:
 			return
 		if self.video_to_play and os.path.exists(self.video_to_play):
-			new_item = self.video_to_play[:self.video_to_play.rfind(".")] \
-				+ ".seen"
-			#~ log_new_item = new_item \
-				#~ .encode("cp1251", "replace").decode("cp1251")
+			#~ new_item = self.video_to_play[:self.video_to_play.rfind(".")] \
+				#~ + ".seen"
+			new_item = self.video_to_play + ".seen"
 
 			logd("renaming %r to %r" % (self.video_to_play, new_item))
 
