@@ -74,7 +74,9 @@ txtPause = "Пауза"
 txtPlay = "Продолжить"
 PLAYCMD = 'c:\\windows\\system32\\cmd.exe /c start C:\\apps\\mpv\\' \
 	+ PL_EXE + ' -fs --fs-screen=0' \
-	+ ' --softvol-max=500 --brightness=10 -- "%s"'
+	+ ' --softvol-max=500 --brightness=10 ' \
+	+ '--af=lavfi=[loudnorm=I=-16:TP=-1:LRA=2] ' \
+	+ '-- "%s"'
 	# --aid=1
 
 
@@ -371,6 +373,8 @@ class MainWindow(QMainWindow):
 			try:
 				os.rename(self.video_to_play, new_item)
 			except PermissionError:
+				rename_status = "<не удалось переименовать>"
+			except FileExistsError:
 				rename_status = "<не удалось переименовать>"
 
 			self.label_current_video.setText(rename_status)
