@@ -167,7 +167,7 @@ def get_video_title(s):
 
 	if "Й" in s:
 		s = s.replace("Й", "Й")
-	if "Й" in s:
+	if "й" in s:
 		s = s.replace("й", "й")
 
 	ls = s.lower()
