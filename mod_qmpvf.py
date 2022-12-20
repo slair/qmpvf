@@ -469,7 +469,8 @@ class MainWindow(QMainWindow):
 			self.player_pid = get_player_pid(PL_EXE)
 
 			_start_wait = time.perf_counter()
-			while self.player_pid is None and get_procs_count(PL_EXE) == 0:
+			while self.player_pid is None or get_procs_count(PL_EXE) == 0:
+				#~ logd("WAIT_FOR_PLAYER_START")
 				self.player_pid = get_player_pid(PL_EXE)
 				if self.player_pid is not None:
 					logd("player started self.player_pid = %r"
