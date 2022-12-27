@@ -494,6 +494,38 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>pb_2</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>pb_2_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>725</x>
+     <y>68</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>515</x>
+     <y>201</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>pb_3</sender>
+   <signal>clicked()</signal>
+   <receiver>MainWindow</receiver>
+   <slot>pb_3_clicked()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>725</x>
+     <y>94</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>515</x>
+     <y>201</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>kill_player()</slot>

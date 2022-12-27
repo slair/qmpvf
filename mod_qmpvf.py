@@ -517,14 +517,6 @@ class MainWindow(QMainWindow):
 
 		os.kill(self.player_pid, 9)
 
-	def pb_2_clicked(self):
-		if self.order_by is None:
-			self.order_by = "size"
-			self.pb_2.setText(txtName)
-		elif self.order_by == "size":
-			self.order_by = None
-			self.pb_2.setText(txtSize)
-
 	def pb_1_clicked(self):
 		if not self.win_player or self.win_player.id == "":
 			return
@@ -533,10 +525,27 @@ class MainWindow(QMainWindow):
 			self.win_player.send("p")
 			self.pb_1.setText(txtPlay)
 			logd("sent 'p' to %r", self.win_player)
+			return
 		elif self.pb_1.text() == txtPlay:
 			self.win_player.send("p")
 			self.pb_1.setText(txtPause)
 			logd("sent 'p' to %r", self.win_player)
+			return
+
+	def pb_2_clicked(self):
+		logd("self.order_by=%r", self.order_by)
+		if self.order_by is None:
+			self.order_by = "size"
+			self.pb_2.setText(txtName)
+			return
+		elif self.order_by == "size":
+			self.order_by = None
+			self.pb_2.setText(txtSize)
+			return
+
+	def pb_3_clicked(self):
+		...
+		return
 
 
 def qmpvf_main(*args, **kwargs):
