@@ -72,6 +72,8 @@ PARTSEP = "=#="
 PL_EXE = "mpv.exe"
 txtPause = "Пауза"
 txtPlay = "Продолжить"
+txtName = "По имени"
+txtSize = "По размеру"
 PLAYCMD = 'c:\\windows\\system32\\cmd.exe /c start C:\\apps\\mpv\\' \
 	+ PL_EXE + ' -fs --fs-screen=0' \
 	+ ' --softvol-max=500 --brightness=10 ' \
@@ -216,7 +218,7 @@ class MainWindow(QMainWindow):
 	start_perf_counter = tpc()
 	videos = []
 	videos_dirty = True
-	order_by = None
+	order_by = "size"
 	start_next = True
 	video_to_play = None
 	player_pid = None
@@ -239,6 +241,7 @@ class MainWindow(QMainWindow):
 			, self.label_current_video_ss)
 
 		self.pb_1.setText(txtPause)
+		self.pb_2.setText(txtName)
 		self.pb_1.setEnabled(False)
 		self.pb_kill_player.setVisible(False)
 		self.get_videos()
@@ -513,6 +516,14 @@ class MainWindow(QMainWindow):
 			return
 
 		os.kill(self.player_pid, 9)
+
+	def pb_2_clicked(self):
+		if self.order_by is None:
+			self.order_by = "size"
+			self.pb_2.setText(txtName)
+		elif self.order_by == "size":
+			self.order_by = None
+			self.pb_2.setText(txtSize)
 
 	def pb_1_clicked(self):
 		if not self.win_player or self.win_player.id == "":

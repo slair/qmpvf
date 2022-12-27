@@ -498,5 +498,7 @@
  <slots>
   <slot>kill_player()</slot>
   <slot>pb_1_clicked()</slot>
+  <slot>pb_2_clicked()</slot>
+  <slot>pb_3_clicked()</slot>
  </slots>
 </ui>
