@@ -537,10 +537,12 @@ class MainWindow(QMainWindow):
 		if self.order_by is None:
 			self.order_by = "size"
 			self.pb_2.setText(txtName)
+			self.kill_player()
 			return
 		elif self.order_by == "size":
 			self.order_by = None
 			self.pb_2.setText(txtSize)
+			self.kill_player()
 			return
 
 	def pb_3_clicked(self):
