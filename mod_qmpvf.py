@@ -74,10 +74,14 @@ txtPause = "Пауза"
 txtPlay = "Продолжить"
 txtName = "По имени"
 txtSize = "По размеру"
+
+audio_filer = "--af=lavfi=[loudnorm=I=-16:TP=-1:LRA=2] "
+audio_filer = ""
+
 PLAYCMD = 'c:\\windows\\system32\\cmd.exe /c start C:\\apps\\mpv\\' \
 	+ PL_EXE + ' -fs --fs-screen=0' \
 	+ ' --softvol-max=500 --brightness=10 ' \
-	+ '--af=lavfi=[loudnorm=I=-16:TP=-1:LRA=2] ' \
+	+ audio_filer \
 	+ '-- "%s"'
 	# --aid=1
 

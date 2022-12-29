@@ -39,14 +39,12 @@ print("log_file_name = %r" % log_file_name)
 
 BASELOGFORMAT = "%(asctime)s%(levelname)9s %(funcName)s: %(message)s"
 FLN = ""
-#~ BASEDTFORMAT = " %d.%m.%Y %H-%M-%S "
-BASEDTFORMAT = " %d%m%y %H%M%S "
+BASEDTFORMAT = "%d.%m.%y %H:%M:%S"
 
 try:
 	if _DEBUG:
-		#~ FLN = "		|		%(pathname)s:%(lineno)d:"
-		FLN = "\t" * 30 + '|	File "%(pathname)s", line %(lineno)d'
-		#~ BASEDTFORMAT = " "
+		#~ FLN = "\t" * 30 + '|	File "%(pathname)s", line %(lineno)d'
+		FLN = "%(filename)s:%(lineno)d: "
 		loglevel = logging.DEBUG
 	else:
 		loglevel = logging.INFO
@@ -54,20 +52,14 @@ except NameError:
 	_DEBUG = False
 	loglevel = logging.INFO
 
-#~ logging.basicConfig(
-	#~ level=loglevel,
-	#~ format=FLN+BASELOGFORMAT,
-	#~ datefmt=BASEDTFORMAT,
-	#~ filename=log_file_name,
-#~ )
 logger = logging.getLogger(my_name)
 console_output_handler = logging.StreamHandler(sys.stderr)
-formatter = logging.Formatter(BASELOGFORMAT + FLN, BASEDTFORMAT)
+formatter = logging.Formatter(FLN + BASELOGFORMAT, BASEDTFORMAT)
 console_output_handler.setFormatter(formatter)
 logger.addHandler(console_output_handler)
 
 fh = logging.FileHandler(log_file_name, encoding="utf-8")
-formatter = logging.Formatter(BASELOGFORMAT + FLN, BASEDTFORMAT)
+formatter = logging.Formatter(FLN + BASELOGFORMAT, BASEDTFORMAT)
 fh.setFormatter(formatter)
 logger.addHandler(fh)
 
@@ -110,16 +102,6 @@ def logt(logf, text, frames=True, title="", skip_empty=True, sep="\n"):
 		logf(mf % item)
 	if frames:
 		logf("└" + "─" * (maxlen + 2) + "┘")
-
-
-#~ def my_excepthookt(excType, excValue, ltraceback, logger=logging):
-	#~ try:
-		#~ logt(loge, "".join(traceback.format_exception(excType, excValue,
-			#~ ltraceback)), title="ERROR "+str(excType))
-	#~ except NameError:
-		#~ logt(print, "".join(traceback.format_exception(excType, excValue,
-			#~ ltraceback)), title="ERROR "+str(excType))
-	#~ QUIT(200)
 
 
 def my_excepthookt(excType, excValue, tb):
