@@ -234,6 +234,7 @@ class MainWindow(QMainWindow):
 	win_player = None
 	label_current_video_ss = None
 	all_chars = string.ascii_lowercase + string.digits + "/*"
+	rename_on_stop = True
 
 	def __init__(self):
 		super(MainWindow, self).__init__()
@@ -343,7 +344,13 @@ class MainWindow(QMainWindow):
 
 		if self.ts_video_stopped \
 			and (tpc() - self.ts_video_stopped) > WAIT_BEFORE_RENAME:
-			self.rename_video()
+			if self.rename_on_stop:
+				self.rename_video()
+			else:
+				self.get_videos()
+				self.rename_on_stop = True
+				self.ts_video_stopped = None
+				self.ts_video_renamed = tpc()
 
 		if self.ts_video_renamed \
 			and (tpc() - self.ts_video_renamed) > WAIT_AFTER_RENAME:
@@ -413,8 +420,11 @@ class MainWindow(QMainWindow):
 		if self.order_by == "size":
 			self.videos.sort(key=lambda x: x[1])
 			self.videos.reverse()
+			logd("sort by size")
 		else:
 			self.videos.sort(key=lambda x: x[0].lower())
+			logd("sort by name")
+		logd(self.videos)
 
 		self.videos_dirty = True
 		#~ for item in self.videos:
@@ -537,6 +547,7 @@ class MainWindow(QMainWindow):
 			return
 
 	def pb_2_clicked(self):
+		self.rename_on_stop = False
 		logd("self.order_by=%r", self.order_by)
 		if self.order_by is None:
 			self.order_by = "size"
