@@ -347,6 +347,7 @@ class MainWindow(QMainWindow):
 			if self.rename_on_stop:
 				self.rename_video()
 			else:
+				self.label_current_video.setText(" ")
 				self.get_videos()
 				self.rename_on_stop = True
 				self.ts_video_stopped = None
