@@ -177,7 +177,8 @@ def get_video_title(s):
 		s = s.replace("й", "й")
 
 	ls = s.lower()
-	if ls.endswith(".mp4") or ls.endswith(".avi") or ls.endswith(".mov"):
+	if ls.endswith(".mp4") or ls.endswith(".avi") or ls.endswith(".mov") \
+		or ls.endswith(".mkv"):
 		s = s[:-4]
 
 	if " - " in s:
