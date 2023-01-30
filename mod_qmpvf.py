@@ -252,13 +252,14 @@ class MainWindow(QMainWindow):
 		self.pb_kill_player.setVisible(False)
 		self.get_videos()
 		self.player_pid = get_player_pid(PL_EXE)
-		self.start_video()
 
 		self.timer = QTimer(self)
 		self.timer.timeout.connect(self.on_timeout)
 		self.timer.start(TIMER_INTERVAL)
 		logd("TIMER_INTERVAL=%r msec Passed %.6f sec"
 			, TIMER_INTERVAL, tpc() - self.start_perf_counter)
+
+		QTimer.singleShot(1, self.start_video)
 
 	def keyPressEvent(self, event):
 		logd("event.key()=%r", event.key())
