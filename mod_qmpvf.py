@@ -441,6 +441,7 @@ class MainWindow(QMainWindow):
 		_ += glob.glob("*.webm")
 		_ += glob.glob("*.m4v")
 		_ += glob.glob("*.mov")
+		_ += glob.glob("*.dat")
 		self.videos = []
 		for fn in _:
 			fsize = os.stat(fn).st_size
