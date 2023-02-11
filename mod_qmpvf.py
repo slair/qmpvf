@@ -180,6 +180,8 @@ def get_video_title(s):
 	if ls.endswith(".mp4") or ls.endswith(".avi") or ls.endswith(".mov") \
 		or ls.endswith(".mkv") or ls.endswith(".m4v") or ls.endswith(".dat"):
 		s = s[:-4]
+	elif ls.endswith(".webm"):
+		s = s[:-5]
 
 	if " - " in s:
 		s = s.replace(" - ", "\n")
