@@ -68,7 +68,8 @@ TIMER_INTERVAL = 1000			# milliseconds
 WAIT_FOR_PLAYER_START = 5		# seconds
 WAIT_BEFORE_RENAME = 3			# seconds
 WAIT_AFTER_RENAME = 2			# seconds
-PARTSEP = "=#="
+#~ PARTSEP = "=#="
+PARTSEP = "·"
 PL_EXE = "mpv.exe"
 txtPause = "Пауза"
 txtPlay = "Продолжить"
