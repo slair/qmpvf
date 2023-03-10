@@ -240,8 +240,12 @@ class MainWindow(QMainWindow):
 	all_chars = string.ascii_lowercase + string.digits + "/*"
 	rename_on_stop = True
 
-	def __init__(self):
+	def __init__(self, *args):
 		super(MainWindow, self).__init__()
+
+		if args and args[0]:
+			self.order_by = args[0]
+			logi("Set self.order_by =", self.order_by)
 
 		self.load_ui()
 
@@ -579,7 +583,7 @@ def qmpvf_main(*args, **kwargs):
 			logd("%16s = %s", var, value)
 
 	app = QApplication([])
-	widget = MainWindow()
+	widget = MainWindow(args)
 
 	#~ if not RESOURCES:
 	widget.showMaximized()
@@ -593,7 +597,7 @@ def main():
 	logd("- main()", __name__)
 	for var, value in globals().items():
 		logd("%16s = %s" % (var, value))
-	qmpvf_main()
+	qmpvf_main(sys.argv)
 
 
 if __name__ == '__main__':

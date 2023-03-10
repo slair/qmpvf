@@ -177,7 +177,12 @@ def main():
 	for var, value in globals().items():
 		logd("%16s = %s", var, value)
 
-	qmpvf_main()
+	order = None
+	if len(sys.argv) > 1:
+		if sys.argv[1] == "-name":
+			order = "name"
+
+	qmpvf_main(order)
 
 	QUIT()
 
