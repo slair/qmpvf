@@ -243,9 +243,10 @@ class MainWindow(QMainWindow):
 	def __init__(self, *args):
 		super(MainWindow, self).__init__()
 
+		logd("args = %r", args)
 		if args and args[0]:
 			self.order_by = args[0]
-			logi("Set self.order_by =", self.order_by)
+			logi("Set self.order_by = %r", self.order_by)
 
 		self.load_ui()
 
@@ -254,7 +255,14 @@ class MainWindow(QMainWindow):
 			, self.label_current_video_ss)
 
 		self.pb_1.setText(txtPause)
-		self.pb_2.setText(txtName)
+
+		if self.order_by == "name":
+			self.pb_2.setText(txtSize)
+		elif self.order_by == "size":
+			self.pb_2.setText(txtName)
+		else:
+			loge("Wrong self.order_by value = %r", self.order_by)
+
 		self.pb_1.setEnabled(False)
 		self.pb_kill_player.setVisible(False)
 		self.get_videos()
@@ -560,16 +568,18 @@ class MainWindow(QMainWindow):
 	def pb_2_clicked(self):
 		self.rename_on_stop = False
 		logd("self.order_by=%r", self.order_by)
-		if self.order_by is None:
+		if self.order_by == "name":
 			self.order_by = "size"
 			self.pb_2.setText(txtName)
 			self.kill_player()
 			return
 		elif self.order_by == "size":
-			self.order_by = None
+			self.order_by = "name"
 			self.pb_2.setText(txtSize)
 			self.kill_player()
 			return
+		else:
+			loge("Wrong self.order_by value = %r", self.order_by)
 
 	def pb_3_clicked(self):
 		...
@@ -583,7 +593,7 @@ def qmpvf_main(*args, **kwargs):
 			logd("%16s = %s", var, value)
 
 	app = QApplication([])
-	widget = MainWindow(args)
+	widget = MainWindow(*args)
 
 	#~ if not RESOURCES:
 	widget.showMaximized()
