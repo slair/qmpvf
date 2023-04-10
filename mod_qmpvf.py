@@ -381,10 +381,12 @@ class MainWindow(QMainWindow):
 				% self.sec_remains
 				+ mc("секунду", "секунды", "секунд", self.sec_remains))
 			self.sec_remains -= 1
-			snd_play_async("C:\\slair\\share\\sounds\\click-6.ogg")
+			#~ if self.sec_remains > 0:
+			snd_play_async("C:\\slair\\share\\sounds\\click-6.wav")
 
 			if self.sec_remains <= -1:
-				snd_play_async("C:\\slair\\share\\sounds\\drum.mp3")
+				snd_play_async("C:\\slair\\share\\sounds\\drum.wav", ep=True)
+				#~ time.sleep(2)
 				self.close()
 
 		duration = tpc() - ts
